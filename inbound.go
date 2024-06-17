@@ -20,18 +20,20 @@ import (
 
 // InboundOptions - Used to dial a new inbound ESL connection to FreeSWITCH
 type InboundOptions struct {
-	Options                    // Generic common options to both Inbound and Outbound Conn
-	Network      string        // The network type to use, should always be tcp, tcp4, tcp6.
-	Password     string        // The password used to authenticate with FreeSWITCH. Usually ClueCon
-	OnDisconnect func()        // An optional function to be called with the inbound connection gets disconnected
+	Options             // Generic common options to both Inbound and Outbound Conn
+	Network      string // The network type to use, should always be tcp, tcp4, tcp6.
+	Password     string // The password used to authenticate with FreeSWITCH. Usually ClueCon
+	OnDisconnect func() // An optional function to be called with the inbound connection gets disconnected
+	DialTimeout  time.Duration
 	AuthTimeout  time.Duration // How long to wait for authentication to complete
 }
 
-// DefaultOutboundOptions - The default options used for creating the inbound connection
+// DefaultInboundOptions - The default options used for creating the inbound connection
 var DefaultInboundOptions = InboundOptions{
 	Options:     DefaultOptions,
 	Network:     "tcp",
 	Password:    "ClueCon",
+	DialTimeout: 5 * time.Second,
 	AuthTimeout: 5 * time.Second,
 }
 
@@ -40,12 +42,12 @@ func Dial(address, password string, onDisconnect func()) (*Conn, error) {
 	opts := DefaultInboundOptions
 	opts.Password = password
 	opts.OnDisconnect = onDisconnect
-	return opts.Dial(address)
+	return opts.DialWithTimeout(address, opts.DialTimeout)
 }
 
-// Dial - Connects to FreeSWITCH ESL on the address with the provided options. Returns the connection and any errors encountered
-func (opts InboundOptions) Dial(address string) (*Conn, error) {
-	c, err := net.Dial(opts.Network, address)
+// DialWithTimeout - Connects to FreeSWITCH ESL on the address with the provided options. Returns the connection and any errors encountered
+func (opts InboundOptions) DialWithTimeout(address string, timeout time.Duration) (*Conn, error) {
+	c, err := net.DialTimeout(opts.Network, address, timeout)
 	if err != nil {
 		return nil, err
 	}
