@@ -183,9 +183,9 @@ func (c *Conn) close() {
 	c.stopFunc()
 	c.responseChanMutex.Lock()
 	defer c.responseChanMutex.Unlock()
-	for key, responseChan := range c.responseChannels {
+	for _, responseChan := range c.responseChannels {
 		close(responseChan)
-		delete(c.responseChannels, key)
+		// delete(c.responseChannels, key)
 	}
 
 	// Close the connection only after we have the response channel lock and we have deleted all response channels to ensure we don't receive on a closed channel
